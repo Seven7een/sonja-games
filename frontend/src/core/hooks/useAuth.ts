@@ -1,0 +1,120 @@
+/**
+ * Custom authentication hook
+ * Wraps Clerk's useUser and useAuth hooks with additional functionality
+ */
+
+import { useUser, useAuth as useClerkAuth } from '@clerk/clerk-react';
+import { useEffect, useState } from 'react';
+import { setAuthToken } from '../services/api';
+import { User } from '../types/user.types';
+import { syncUser } from '../services/authService';
+
+/**
+ * Extended auth hook return type
+ */
+export interface UseAuthReturn {
+  // User data
+  user: User | null;
+  clerkUser: any; // Clerk's user object
+  
+  // Auth state
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  isSyncing: boolean;
+  
+  // Auth methods
+  signOut: () => Promise<void>;
+  getToken: () => Promise<string | null>;
+}
+
+/**
+ * Custom hook for authentication
+ * Provides user data, auth state, and auth methods
+ */
+export const useAuth = (): UseAuthReturn => {
+  const { user: clerkUser, isLoaded: isUserLoaded } = useUser();
+  const { signOut: clerkSignOut, getToken: clerkGetToken } = useClerkAuth();
+  const [user, setUser] = useState<User | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Update auth token and sync user when Clerk user changes
+  useEffect(() => {
+    const updateTokenAndSyncUser = async () => {
+      if (clerkUser) {
+        try {
+          const token = await clerkGetToken();
+          setAuthToken(token);
+          
+          // Sync user with backend
+          setIsSyncing(true);
+          try {
+            const response = await syncUser(
+              clerkUser.id,
+              clerkUser.primaryEmailAddress?.emailAddress || '',
+              clerkUser.username || undefined
+            );
+            
+            // Use the synced user data from backend
+            setUser(response.user);
+            console.log('User synced successfully:', response.message);
+          } catch (syncError) {
+            console.error('Failed to sync user with backend:', syncError);
+            
+            // Fallback: Map Clerk user to our User type
+            const mappedUser: User = {
+              id: clerkUser.id,
+              email: clerkUser.primaryEmailAddress?.emailAddress || '',
+              username: clerkUser.username || null,
+              created_at: new Date(clerkUser.createdAt || Date.now()).toISOString(),
+              updated_at: new Date(clerkUser.updatedAt || Date.now()).toISOString(),
+            };
+            
+            setUser(mappedUser);
+          } finally {
+            setIsSyncing(false);
+          }
+        } catch (error) {
+          console.error('Failed to get auth token:', error);
+          setAuthToken(null);
+          setUser(null);
+          setIsSyncing(false);
+        }
+      } else {
+        setAuthToken(null);
+        setUser(null);
+        setIsSyncing(false);
+      }
+    };
+
+    updateTokenAndSyncUser();
+  }, [clerkUser, clerkGetToken]);
+
+  // Wrapper for sign out
+  const signOut = async () => {
+    await clerkSignOut();
+    setAuthToken(null);
+    setUser(null);
+  };
+
+  // Wrapper for get token
+  const getToken = async (): Promise<string | null> => {
+    try {
+      return await clerkGetToken();
+    } catch (error) {
+      console.error('Failed to get token:', error);
+      return null;
+    }
+  };
+
+  return {
+    user,
+    clerkUser,
+    isAuthenticated: !!clerkUser,
+    isLoading: !isUserLoaded || isSyncing,
+    isSyncing,
+    signOut,
+    getToken,
+  };
+};
+
+export default useAuth;
