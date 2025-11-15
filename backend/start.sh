@@ -13,7 +13,10 @@ echo "========================================="
 
 echo ""
 echo "📦 Checking database migration status..."
-alembic current -v || echo "No migrations applied yet"
+alembic current || echo "No migrations applied yet"
+echo ""
+echo "📦 Listing migration files in alembic/versions:"
+ls -la alembic/versions/
 echo ""
 echo "📦 Available migrations:"
 alembic history
@@ -27,10 +30,10 @@ if [ "$RESET_DATABASE" = "true" ]; then
 fi
 
 echo "📦 Running database migrations..."
-alembic upgrade head -v
+alembic upgrade head
 echo ""
 echo "📦 Current migration version:"
-alembic current -v
+alembic current
 echo "✓ Migrations complete"
 
 echo ""
