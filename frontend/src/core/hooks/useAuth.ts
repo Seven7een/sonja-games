@@ -38,12 +38,11 @@ export const useAuth = (): UseAuthReturn => {
   const [user, setUser] = useState<User | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [hasToken, setHasToken] = useState(false);
-  const [lastSyncedUserId, setLastSyncedUserId] = useState<string | null>(null);
 
   // Update auth token and sync user when Clerk user changes
   useEffect(() => {
     const updateTokenAndSyncUser = async () => {
-      if (clerkUser && clerkUser.id !== lastSyncedUserId) {
+      if (clerkUser) {
         try {
           const token = await clerkGetToken();
           setAuthToken(token);
@@ -52,26 +51,16 @@ export const useAuth = (): UseAuthReturn => {
           // Sync user with backend
           setIsSyncing(true);
           try {
-            console.log('🔄 Syncing user with backend...', {
-              id: clerkUser.id,
-              email: clerkUser.primaryEmailAddress?.emailAddress,
-              username: clerkUser.username
-            });
-            
             const response = await syncUser(
               clerkUser.id,
               clerkUser.primaryEmailAddress?.emailAddress || '',
               clerkUser.username || undefined
             );
             
-            console.log('✅ User sync response:', response);
-            
             // Backend returns user directly
             setUser(response);
-            setLastSyncedUserId(clerkUser.id);
-            console.log('✅ User state updated:', response);
           } catch (syncError) {
-            console.error('❌ Failed to sync user with backend:', syncError);
+            console.error('Failed to sync user with backend:', syncError);
             
             // Fallback: Map Clerk user to our User type
             const mappedUser: User = {
@@ -97,7 +86,6 @@ export const useAuth = (): UseAuthReturn => {
         setHasToken(false);
         setUser(null);
         setIsSyncing(false);
-        setLastSyncedUserId(null);
       }
     };
 
