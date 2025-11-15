@@ -1,6 +1,5 @@
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile"
 
 [[build.buildArgs]]
 name = "VITE_API_URL"
