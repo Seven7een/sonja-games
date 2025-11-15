@@ -102,7 +102,7 @@ export const useAuth = (): UseAuthReturn => {
     };
 
     updateTokenAndSyncUser();
-  }, [clerkUser, clerkGetToken, lastSyncedUserId]);
+  }, [clerkUser, clerkGetToken]); // Don't include lastSyncedUserId to avoid infinite loop
 
   // Wrapper for sign out
   const signOut = async () => {
