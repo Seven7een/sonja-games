@@ -1,0 +1,93 @@
+from pydantic import BaseModel, Field
+from typing import Dict, List, Optional
+from datetime import datetime, date
+from uuid import UUID
+
+
+class PuzzleInfo(BaseModel):
+    """Information about a crossword puzzle (without answers)"""
+    puzzle_id: UUID
+    date: date
+    grid_data: Dict  # 5x5 grid structure
+    clues_across: Dict[str, str]  # {number: clue_text}
+    clues_down: Dict[str, str]  # {number: clue_text}
+
+
+class PuzzleResponse(BaseModel):
+    """Full puzzle response including answers (for admin/testing)"""
+    id: UUID
+    date: date
+    grid_data: Dict
+    clues_across: Dict[str, str]
+    clues_down: Dict[str, str]
+    answers_across: Dict[str, str]
+    answers_down: Dict[str, str]
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class GameSessionResponse(BaseModel):
+    """Response for a crossword game session"""
+    id: UUID
+    user_id: str
+    daily_puzzle_id: UUID
+    current_grid: Dict
+    completed: bool
+    completion_time_seconds: Optional[int]
+    completed_at: Optional[datetime]
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class GameSessionCreate(BaseModel):
+    """Request to create a new game session"""
+    date: Optional[date] = None  # Defaults to today if not provided
+
+
+class GridUpdate(BaseModel):
+    """Request to update the current grid state"""
+    current_grid: Dict = Field(..., description="User's current grid state")
+
+
+class CheckAnswersResponse(BaseModel):
+    """Response for checking answers"""
+    correct_across: Dict[str, bool]  # {number: is_correct}
+    correct_down: Dict[str, bool]  # {number: is_correct}
+    all_correct: bool
+
+
+class CompleteSessionRequest(BaseModel):
+    """Request to complete a session"""
+    completion_time_seconds: int = Field(..., gt=0, description="Time taken to complete in seconds")
+
+
+class CrosswordStats(BaseModel):
+    """Aggregate statistics for a user"""
+    total_completed: int
+    average_completion_time_seconds: Optional[float]
+    current_streak: int
+    max_streak: int
+
+
+class GameHistoryItem(BaseModel):
+    """Single item in crossword game history"""
+    id: UUID
+    date: date
+    completed: bool
+    completion_time_seconds: Optional[int]
+    completed_at: Optional[datetime]
+    
+    class Config:
+        from_attributes = True
+
+
+class GameHistoryResponse(BaseModel):
+    """Paginated game history response"""
+    games: List[GameHistoryItem]
+    total: int
+    page: int
+    page_size: int

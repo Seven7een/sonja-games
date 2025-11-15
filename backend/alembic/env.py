@@ -22,6 +22,7 @@ from app.database import Base
 # Import all models here so Alembic can detect them
 from app.core.models import User  # noqa: F401
 from app.games.wordle.models import WordleDailyChallenge, WordleGameSession  # noqa: F401
+from app.games.crossword.models import CrosswordDailyPuzzle, CrosswordGameSession  # noqa: F401
 
 target_metadata = Base.metadata
 
