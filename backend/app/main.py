@@ -1,16 +1,32 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.config import settings
-from app.core.routers import auth_router
-from app.games.wordle.router import router as wordle_router
 import logging
+import sys
 
-# Configure logging
+# Configure logging FIRST
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+logger.info("🔧 Starting application initialization...")
+
+try:
+    from app.config import settings
+    logger.info("✓ Config loaded successfully")
+    
+    from app.core.routers import auth_router
+    logger.info("✓ Auth router imported successfully")
+    
+    from app.games.wordle.router import router as wordle_router
+    logger.info("✓ Wordle router imported successfully")
+    
+except Exception as e:
+    logger.error(f"❌ Failed to import modules: {e}")
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)
 
 app = FastAPI(
     title="Sonja Games API",

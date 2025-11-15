@@ -6,9 +6,22 @@ from clerk_backend_api.security.types import AuthenticateRequestOptions
 from app.config import settings
 from app.database import get_db
 from app.core.models.user import User
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Initialize Clerk client
-clerk_client = Clerk(bearer_auth=settings.CLERK_SECRET_KEY)
+try:
+    if not settings.CLERK_SECRET_KEY:
+        logger.error("❌ CLERK_SECRET_KEY is not set! Authentication will not work.")
+        raise ValueError("CLERK_SECRET_KEY environment variable is required")
+    
+    logger.info(f"✓ Initializing Clerk client with key: {settings.CLERK_SECRET_KEY[:10]}...")
+    clerk_client = Clerk(bearer_auth=settings.CLERK_SECRET_KEY)
+    logger.info("✓ Clerk client initialized successfully")
+except Exception as e:
+    logger.error(f"❌ Failed to initialize Clerk client: {e}")
+    raise
 
 # HTTP Bearer token scheme
 security = HTTPBearer()
