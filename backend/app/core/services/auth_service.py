@@ -17,18 +17,23 @@ def sync_user(db: Session, user_data: UserCreate) -> User:
     Returns:
         User: Synced user record
     """
+    print(f"📝 Auth service - syncing user: {user_data.id}, {user_data.email}, {user_data.username}")
+    
     # Check if user already exists
     existing_user = db.query(User).filter(User.id == user_data.id).first()
     
     if existing_user:
         # Update existing user
+        print(f"📝 Updating existing user: {existing_user.id}")
         existing_user.email = user_data.email
         existing_user.username = user_data.username
         db.commit()
         db.refresh(existing_user)
+        print(f"✅ User updated - Email: {existing_user.email}, Username: {existing_user.username}")
         return existing_user
     
     # Create new user
+    print(f"📝 Creating new user: {user_data.id}")
     new_user = User(
         id=user_data.id,
         email=user_data.email,
@@ -39,12 +44,15 @@ def sync_user(db: Session, user_data: UserCreate) -> User:
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
+        print(f"✅ New user created - Email: {new_user.email}, Username: {new_user.username}")
         return new_user
     except IntegrityError:
         db.rollback()
+        print(f"⚠️ IntegrityError - user may have been created by another request")
         # Handle race condition - user was created by another request
         existing_user = db.query(User).filter(User.id == user_data.id).first()
         if existing_user:
+            print(f"✅ Found user after race condition - Email: {existing_user.email}")
             return existing_user
         raise
 

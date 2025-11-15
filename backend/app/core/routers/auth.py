@@ -34,7 +34,10 @@ async def sync_authenticated_user(
     email = token_data.get("email")
     username = token_data.get("username")
     
+    print(f"🔄 Syncing user - ID: {user_id}, Email: {email}, Username: {username}")
+    
     if not user_id or not email:
+        print(f"❌ Sync failed - missing required info. user_id: {user_id}, email: {email}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid token: missing required user information"
@@ -49,5 +52,7 @@ async def sync_authenticated_user(
     
     # Sync user to database
     user = sync_user(db, user_data)
+    
+    print(f"✅ User synced successfully - ID: {user.id}, Email: {user.email}, Username: {user.username}")
     
     return user
