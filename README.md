@@ -517,6 +517,15 @@ Required environment variables for the frontend service:
   - Verify "Root Directory" is set correctly (`backend` or `frontend`)
   - Verify "Dockerfile Path" is just `Dockerfile` (not `backend/Dockerfile`)
 
+- **Frontend missing VITE_* environment variables:**
+  - Vite env vars are baked in at build time, not runtime
+  - After adding/changing `VITE_*` variables, you MUST redeploy
+  - Go to Deployments → Click ••• → Redeploy
+
+- **Permission denied errors in backend:**
+  - Check that Dockerfile properly sets ownership for non-root user
+  - Ensure PATH includes the correct bin directory
+
 **Troubleshooting Cloudflare + Railway:**
 
 - **SSL Certificate Errors:** Make sure Cloudflare proxy is OFF (gray cloud, not orange)
