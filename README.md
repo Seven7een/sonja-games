@@ -326,6 +326,19 @@ Required environment variables for the frontend service:
 1. [Railway account](https://railway.app/)
 2. Clerk account with API keys
 3. Git repository with your code
+4. Domain managed in Cloudflare (for custom domains)
+
+### Quick Reference
+
+**Services to Deploy:**
+- PostgreSQL database (managed by Railway)
+- Backend service (`api.sonja.games`)
+- Frontend service (`sonja.games`)
+
+**Key Configuration:**
+- Backend uses `backend/railway.toml` and `backend/Dockerfile`
+- Frontend uses `frontend/railway.toml` and `frontend/Dockerfile`
+- Both services auto-deploy on git push
 
 ### Deployment Steps
 
@@ -346,19 +359,26 @@ Required environment variables for the frontend service:
 
 1. Click "New" → "GitHub Repo"
 2. Select your repository
-3. Configure the service:
-   - **Name:** `backend`
-   - **Root Directory:** `backend`
-   - **Build Command:** (Handled by Dockerfile)
-   - **Start Command:** (Handled by railway.toml)
+3. **IMPORTANT: Configure the service settings:**
+   - Click on the service after it's created
+   - Go to "Settings" tab
+   - Under "Service Settings":
+     - **Service Name:** `backend`
+     - **Root Directory:** `backend` ← Set this!
+   - Under "Build":
+     - **Builder:** Select "Dockerfile" (not Nixpacks/Railpack)
+     - **Dockerfile Path:** `Dockerfile`
+   - Click "Deploy" or wait for auto-deploy
 
 4. Add environment variables:
    ```
    CLERK_SECRET_KEY=sk_live_...
    CLERK_PUBLISHABLE_KEY=pk_live_...
    ENVIRONMENT=production
-   CORS_ORIGINS=https://your-frontend-url.railway.app
+   CORS_ORIGINS=https://sonja.games
    ```
+   
+   **Note:** If using a custom domain, use that instead of Railway's generated URL.
 
 5. Railway will automatically:
    - Detect the `railway.toml` configuration
@@ -367,45 +387,186 @@ Required environment variables for the frontend service:
    - Expose the service with a public URL
 
 6. Copy the backend URL (e.g., `https://backend-production-xxxx.up.railway.app`)
+   
+   **Note:** You can also set up a custom subdomain like `api.sonja.games` for your backend.
 
 #### 4. Deploy Frontend Service
 
 1. Click "New" → "GitHub Repo"
 2. Select your repository again
-3. Configure the service:
-   - **Name:** `frontend`
-   - **Root Directory:** `frontend`
-   - **Build Command:** (Handled by Dockerfile)
-   - **Start Command:** (Handled by railway.toml)
+3. **IMPORTANT: Configure the service settings:**
+   - Click on the service after it's created
+   - Go to "Settings" tab
+   - Under "Service Settings":
+     - **Service Name:** `frontend`
+     - **Root Directory:** `frontend` ← Set this!
+   - Under "Build":
+     - **Builder:** Select "Dockerfile" (not Nixpacks/Railpack)
+     - **Dockerfile Path:** `Dockerfile`
+   - Click "Deploy" or wait for auto-deploy
 
 4. Add environment variables:
    ```
-   VITE_API_URL=https://backend-production-xxxx.up.railway.app
+   VITE_API_URL=https://api.sonja.games
    VITE_CLERK_PUBLISHABLE_KEY=pk_live_...
    ```
+   
+   **Note:** Use your custom domain/subdomain for the API URL.
 
 5. Railway will automatically:
    - Build the React app with Vite
    - Serve static files with Nginx
    - Expose the service with a public URL
 
-#### 5. Update CORS Origins
+#### 5. Configure Custom Domains with Cloudflare
 
-1. Go back to your backend service settings
-2. Update the `CORS_ORIGINS` variable with your frontend URL:
+**Step 1: Set Up Backend Domain (api.sonja.games)**
+
+1. **In Railway (Backend Service):**
+   - Go to your backend service
+   - Click "Settings" → "Domains"
+   - Click "Custom Domain"
+   - Enter `api.sonja.games`
+   - **Port:** `8000` (when prompted)
+   - Railway will provide a CNAME target (e.g., `backend-production-xxxx.up.railway.app`)
+   - Copy this CNAME target
+
+2. **In Cloudflare:**
+   - Go to your Cloudflare dashboard
+   - Select `sonja.games` domain
+   - Go to "DNS" → "Records"
+   - Click "Add record"
+   - Configure:
+     - **Type:** `CNAME`
+     - **Name:** `api`
+     - **Target:** (paste the Railway CNAME target)
+     - **Proxy status:** 🟠 DNS only (turn OFF the orange cloud)
+     - **TTL:** Auto
+   - Click "Save"
+
+   **Important:** You MUST use "DNS only" (gray cloud) for Railway to work properly. The orange cloud (proxied) will cause SSL issues.
+
+3. **Wait for DNS propagation** (usually 1-5 minutes)
+
+4. **Verify in Railway:**
+   - Railway will automatically detect the DNS change
+   - Wait for the green checkmark next to your custom domain
+   - Test: `https://api.sonja.games/health` should return `{"status": "healthy"}`
+
+**Step 2: Set Up Frontend Domain (sonja.games)**
+
+1. **In Railway (Frontend Service):**
+   - Go to your frontend service
+   - Click "Settings" → "Domains"
+   - Click "Custom Domain"
+   - Enter `sonja.games`
+   - **Port:** `80` (when prompted)
+   - Railway will provide a CNAME target
+   - Copy this CNAME target
+
+2. **In Cloudflare:**
+   - Go to "DNS" → "Records"
+   - You need to use a CNAME for the root domain:
+     - **Option A (Recommended):** Use Cloudflare's CNAME flattening
+       - **Type:** `CNAME`
+       - **Name:** `@`
+       - **Target:** (paste the Railway CNAME target)
+       - **Proxy status:** 🟠 DNS only (gray cloud)
+       - **TTL:** Auto
+     - **Option B:** Use `www` subdomain and redirect
+       - Create CNAME for `www` pointing to Railway
+       - Set up a redirect rule from `sonja.games` to `www.sonja.games`
+   - Click "Save"
+
+   **Important:** Again, use "DNS only" (gray cloud), not proxied.
+
+3. **Wait for DNS propagation**
+
+4. **Verify in Railway:**
+   - Wait for the green checkmark
+   - Test: `https://sonja.games` should load your app
+
+**Step 3: Update Backend CORS Settings**
+
+1. Go to your backend service in Railway
+2. Click "Variables"
+3. Update `CORS_ORIGINS`:
    ```
-   CORS_ORIGINS=https://frontend-production-xxxx.up.railway.app
+   CORS_ORIGINS=https://sonja.games
    ```
+4. The service will automatically redeploy
 
-3. Redeploy the backend service
+**Step 4: Update Frontend API URL (if not already set)**
 
-#### 6. Configure Custom Domain (Optional)
+1. Go to your frontend service in Railway
+2. Click "Variables"
+3. Verify `VITE_API_URL` is set to:
+   ```
+   VITE_API_URL=https://api.sonja.games
+   ```
+4. If you need to change it, the service will automatically redeploy
 
-1. In Railway, go to your frontend service
-2. Click "Settings" → "Domains"
-3. Add your custom domain
-4. Update DNS records as instructed
-5. Update `CORS_ORIGINS` in backend with your custom domain
+**Troubleshooting Railway Deployment:**
+
+- **"Railpack could not determine how to build":** 
+  - Go to service Settings → Set "Root Directory" to `backend` or `frontend`
+  - Change Builder from "Nixpacks" to "Dockerfile"
+  - Redeploy the service
+
+- **Build fails / Can't find Dockerfile:**
+  - Verify "Root Directory" is set correctly (`backend` or `frontend`)
+  - Verify "Dockerfile Path" is just `Dockerfile` (not `backend/Dockerfile`)
+
+**Troubleshooting Cloudflare + Railway:**
+
+- **SSL Certificate Errors:** Make sure Cloudflare proxy is OFF (gray cloud, not orange)
+- **DNS not resolving:** Wait up to 5 minutes, check Cloudflare DNS records are correct
+- **Railway shows "Waiting for DNS":** Verify CNAME target matches exactly what Railway provided
+- **CORS errors:** Ensure `CORS_ORIGINS` in backend matches your frontend domain exactly (including `https://`)
+- **Want to use Cloudflare proxy?** You'll need to configure SSL/TLS mode to "Full (strict)" in Cloudflare, but "DNS only" is simpler and recommended for Railway
+
+#### 6. Verify Deployment
+
+1. Visit `https://sonja.games` - Frontend should load
+2. Visit `https://api.sonja.games/health` - Should return `{"status": "healthy"}`
+3. Test authentication flow
+4. Verify games are working correctly
+
+### Deployment Summary
+
+Here's the complete flow:
+
+```
+1. Railway Project Setup
+   ├── Add PostgreSQL database
+   ├── Deploy backend service (from /backend)
+   └── Deploy frontend service (from /frontend)
+
+2. Cloudflare DNS Configuration
+   ├── api.sonja.games → CNAME → Railway backend (DNS only)
+   └── sonja.games → CNAME → Railway frontend (DNS only)
+
+3. Environment Variables
+   ├── Backend
+   │   ├── DATABASE_URL (auto-set by Railway)
+   │   ├── CLERK_SECRET_KEY
+   │   ├── CLERK_PUBLISHABLE_KEY
+   │   ├── ENVIRONMENT=production
+   │   └── CORS_ORIGINS=https://sonja.games
+   └── Frontend
+       ├── VITE_API_URL=https://api.sonja.games
+       └── VITE_CLERK_PUBLISHABLE_KEY
+
+4. Verify
+   ├── https://api.sonja.games/health → {"status": "healthy"}
+   └── https://sonja.games → App loads
+```
+
+**Important Notes:**
+- Railway automatically runs migrations on backend startup
+- Both services auto-deploy when you push to GitHub
+- SSL certificates are handled automatically by Railway
+- Keep Cloudflare proxy OFF (gray cloud) for Railway domains
 
 ### Deployment Architecture
 
@@ -442,8 +603,8 @@ Required environment variables for the frontend service:
 4. View real-time logs
 
 **Health checks:**
-- Backend: `https://your-backend-url.railway.app/health`
-- Frontend: `https://your-frontend-url.railway.app/`
+- Backend: `https://api.sonja.games/health`
+- Frontend: `https://sonja.games/`
 
 ### Troubleshooting Deployment
 
