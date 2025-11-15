@@ -36,6 +36,8 @@ const createApiClient = (): AxiosInstance => {
       
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+      } else {
+        console.warn('⚠️ No auth token available for request:', config.url);
       }
 
       return config;

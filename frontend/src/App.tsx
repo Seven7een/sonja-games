@@ -4,6 +4,8 @@ import { Layout } from './core/components/layout/Layout';
 import { SignIn } from './core/components/auth/SignIn';
 import { SignUp } from './core/components/auth/SignUp';
 import { Home } from './pages/Home';
+import WordleGame from './games/wordle/pages/WordleGame';
+import WordleStats from './games/wordle/pages/WordleStats';
 
 /**
  * Protected Route wrapper
@@ -23,23 +25,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return isAuthenticated ? <>{children}</> : <Navigate to="/sign-in" replace />;
 };
 
-/**
- * Placeholder components for Wordle game pages
- * These will be implemented in later tasks
- */
-const WordleGamePlaceholder = () => (
-  <div className="text-center py-12">
-    <h2 className="text-2xl font-bold text-gray-900 mb-4">Wordle Game</h2>
-    <p className="text-gray-600">New Game interface coming soon...</p>
-  </div>
-);
 
-const WordleStatsPlaceholder = () => (
-  <div className="text-center py-12">
-    <h2 className="text-2xl font-bold text-gray-900 mb-4">Wordle Statistics</h2>
-    <p className="text-gray-600">Statistics page coming soon...</p>
-  </div>
-);
 
 function App() {
   return (
@@ -63,7 +49,7 @@ function App() {
           element={
             <ProtectedRoute>
               <Layout>
-                <WordleGamePlaceholder />
+                <WordleGame />
               </Layout>
             </ProtectedRoute>
           }
@@ -73,7 +59,7 @@ function App() {
           element={
             <ProtectedRoute>
               <Layout>
-                <WordleStatsPlaceholder />
+                <WordleStats />
               </Layout>
             </ProtectedRoute>
           }

@@ -86,6 +86,53 @@ async def start_game_session(
     return session
 
 
+@router.get("/session/today", response_model=GameSessionResponse)
+async def get_todays_session(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get today's active game session for the authenticated user.
+    Includes stored guess results for UI display.
+    
+    Args:
+        db: Database session
+        current_user: Authenticated user
+        
+    Returns:
+        GameSessionResponse: Today's game session with guess results or 404 if not found
+    """
+    today = date.today()
+    session = service.get_todays_session(db, current_user.id, today)
+    
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No active session found for today"
+        )
+    
+    # Use stored guess_results, or calculate if missing (for old sessions)
+    guess_results = session.guess_results
+    if not guess_results and session.guesses:
+        # Fallback for old sessions without stored results
+        guess_results = service.calculate_guess_results_for_session(db, session)
+    
+    # Create response with guess results
+    response = GameSessionResponse(
+        id=session.id,
+        user_id=session.user_id,
+        daily_challenge_id=session.daily_challenge_id,
+        guesses=session.guesses,
+        guess_results=guess_results,
+        won=session.won,
+        attempts_used=session.attempts_used,
+        completed_at=session.completed_at,
+        created_at=session.created_at
+    )
+    
+    return response
+
+
 @router.post("/session/{session_id}/guess", response_model=GuessResult)
 async def submit_guess_to_session(
     session_id: UUID,
@@ -173,11 +220,15 @@ async def check_can_play_today(
         current_user: Authenticated user
         
     Returns:
-        dict: {"can_play": bool}
+        dict: {"can_play": bool, "message": str (optional)}
     """
     can_play = service.can_play_today(db, current_user.id)
     
-    return {"can_play": can_play}
+    response = {"can_play": can_play}
+    if not can_play:
+        response["message"] = "You have already completed today's challenge!"
+    
+    return response
 
 
 @router.get("/stats", response_model=WordleStats)

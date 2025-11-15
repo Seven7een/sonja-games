@@ -1,7 +1,8 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from clerk_backend_api import Clerk
+from clerk_backend_api.security.types import AuthenticateRequestOptions
 from app.config import settings
 from app.database import get_db
 from app.core.models.user import User
@@ -14,12 +15,14 @@ security = HTTPBearer()
 
 
 async def verify_clerk_token(
+    request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ) -> dict:
     """
-    Verify Clerk JWT token and return user information.
+    Verify Clerk JWT token using authenticateRequest and return user information.
     
     Args:
+        request: FastAPI Request object
         credentials: HTTP Authorization credentials with Bearer token
         
     Returns:
@@ -28,13 +31,62 @@ async def verify_clerk_token(
     Raises:
         HTTPException: If token is invalid or verification fails
     """
-    token = credentials.credentials
-    
     try:
-        # Verify the JWT token with Clerk
-        verified_token = clerk_client.jwt_templates.verify_token(token)
-        return verified_token
+        # Use Clerk's authenticateRequest method
+        # This handles token verification automatically
+        options = AuthenticateRequestOptions(
+            secret_key=settings.CLERK_SECRET_KEY,
+            clock_skew_in_ms=60000,  # Allow 60 seconds of clock skew for Docker time sync issues
+        )
+        auth_result = clerk_client.authenticate_request(request, options)
+        
+        if not auth_result.is_authenticated:
+            print(f"✗ Authentication failed: {auth_result.reason}")
+            print(f"  Message: {auth_result.message}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Authentication failed: {auth_result.reason or 'Invalid token'}",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        # Get the auth object which contains user info
+        auth_obj = auth_result.to_auth()
+        
+        # Extract email and username from claims if available
+        claims = auth_obj.claims or {}
+        print(f"✓ Token verified successfully for user: {auth_obj.user_id}")
+        print(f"  Claims keys: {list(claims.keys())}")
+        
+        # Fetch user details from Clerk if email not in claims
+        email = claims.get("email")
+        username = claims.get("username")
+        
+        if not email:
+            # Fetch user from Clerk API
+            try:
+                user = clerk_client.users.get(user_id=auth_obj.user_id)
+                email = user.email_addresses[0].email_address if user.email_addresses else None
+                username = user.username
+                print(f"  Fetched from Clerk API - email: {email}, username: {username}")
+            except Exception as e:
+                print(f"  Failed to fetch user from Clerk: {e}")
+                import traceback
+                traceback.print_exc()
+        
+        return {
+            "sub": auth_obj.user_id,
+            "session_id": auth_obj.session_id,
+            "org_id": auth_obj.org_id,
+            "email": email,
+            "username": username,
+        }
+        
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"✗ Token verification failed: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid authentication credentials: {str(e)}",
@@ -43,6 +95,7 @@ async def verify_clerk_token(
 
 
 async def get_current_user(
+    request: Request,
     token_data: dict = Depends(verify_clerk_token),
     db: Session = Depends(get_db)
 ) -> User:
@@ -50,6 +103,7 @@ async def get_current_user(
     Get current authenticated user from database.
     
     Args:
+        request: FastAPI Request object
         token_data: Verified token data from Clerk
         db: Database session
         

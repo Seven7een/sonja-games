@@ -30,6 +30,7 @@ class WordleGameSession(Base):
     user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
     daily_challenge_id = Column(UUID(as_uuid=True), ForeignKey("wordle_daily_challenges.id"), nullable=False, index=True)
     guesses = Column(JSON, nullable=False, default=list)
+    guess_results = Column(JSON, nullable=True)  # Stores the letter-by-letter feedback for each guess
     won = Column(Boolean, nullable=False, default=False)
     attempts_used = Column(Integer, nullable=False, default=0)
     completed_at = Column(DateTime(timezone=True), nullable=True)

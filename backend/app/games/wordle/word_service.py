@@ -44,8 +44,8 @@ class WordService:
     def get_daily_word(self, target_date: date) -> str:
         """
         Get the daily challenge word for a specific date.
-        Uses deterministic selection based on date to ensure
-        all users get the same word on the same day.
+        Uses cryptographic hash for deterministic but unpredictable selection.
+        This ensures all servers get the same word, but the sequence can't be predicted.
         
         Args:
             target_date: The date to get the word for
@@ -53,12 +53,21 @@ class WordService:
         Returns:
             The daily word (lowercase)
         """
-        # Use epoch days as seed for deterministic selection
-        epoch = date(2024, 1, 1)
-        days_since_epoch = (target_date - epoch).days
+        import hashlib
+        import os
         
-        # Use modulo to cycle through answer list
-        index = days_since_epoch % len(self._answers)
+        # Get secret from environment or use a default (should be set in production)
+        secret = os.getenv('WORDLE_SECRET', 'default-secret-change-in-production')
+        
+        # Create hash from date + secret
+        date_str = target_date.isoformat()
+        hash_input = f"{date_str}:{secret}".encode('utf-8')
+        hash_digest = hashlib.sha256(hash_input).hexdigest()
+        
+        # Convert first 8 hex chars to integer for index
+        hash_int = int(hash_digest[:8], 16)
+        index = hash_int % len(self._answers)
+        
         return self._answers[index]
 
     

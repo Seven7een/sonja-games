@@ -72,6 +72,10 @@ migrate-down: ## Rollback last migration
 db-shell: ## Open PostgreSQL shell
 	docker-compose -f docker-compose.dev.yml exec db psql -U postgres -d sonja_games_dev
 
+# Wordle commands
+generate-words: ## Generate words.json from online word list
+	docker-compose -f docker-compose.dev.yml exec backend python scripts/generate_words.py
+
 # Shell access
 shell-backend: ## Open shell in backend container
 	docker-compose -f docker-compose.dev.yml exec backend sh

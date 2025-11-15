@@ -21,6 +21,7 @@ export interface UseAuthReturn {
   isAuthenticated: boolean;
   isLoading: boolean;
   isSyncing: boolean;
+  hasToken: boolean;
   
   // Auth methods
   signOut: () => Promise<void>;
@@ -36,6 +37,7 @@ export const useAuth = (): UseAuthReturn => {
   const { signOut: clerkSignOut, getToken: clerkGetToken } = useClerkAuth();
   const [user, setUser] = useState<User | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [hasToken, setHasToken] = useState(false);
 
   // Update auth token and sync user when Clerk user changes
   useEffect(() => {
@@ -44,6 +46,7 @@ export const useAuth = (): UseAuthReturn => {
         try {
           const token = await clerkGetToken();
           setAuthToken(token);
+          setHasToken(!!token);
           
           // Sync user with backend
           setIsSyncing(true);
@@ -56,7 +59,6 @@ export const useAuth = (): UseAuthReturn => {
             
             // Use the synced user data from backend
             setUser(response.user);
-            console.log('User synced successfully:', response.message);
           } catch (syncError) {
             console.error('Failed to sync user with backend:', syncError);
             
@@ -81,6 +83,7 @@ export const useAuth = (): UseAuthReturn => {
         }
       } else {
         setAuthToken(null);
+        setHasToken(false);
         setUser(null);
         setIsSyncing(false);
       }
@@ -112,6 +115,7 @@ export const useAuth = (): UseAuthReturn => {
     isAuthenticated: !!clerkUser,
     isLoading: !isUserLoaded || isSyncing,
     isSyncing,
+    hasToken,
     signOut,
     getToken,
   };

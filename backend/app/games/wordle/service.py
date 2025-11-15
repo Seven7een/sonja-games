@@ -141,6 +141,11 @@ def submit_guess(
     session.guesses = session.guesses + [guess]
     session.attempts_used += 1
     
+    # Store guess results - convert LetterResult objects to dicts for JSON storage
+    current_results = session.guess_results or []
+    feedback_dict = [{"letter": lr.letter, "status": lr.status.value} for lr in feedback]
+    session.guess_results = current_results + [feedback_dict]
+    
     # Check if won
     is_correct = all(letter.status == LetterStatus.CORRECT for letter in feedback)
     game_over = False
@@ -304,6 +309,67 @@ def get_game_history(
     ]
     
     return history_items, total
+
+
+def get_todays_session(db: Session, user_id: str, target_date: date) -> Optional[WordleGameSession]:
+    """
+    Get the user's game session for a specific date.
+    
+    Args:
+        db: Database session
+        user_id: The user's ID
+        target_date: The date to get the session for
+        
+    Returns:
+        WordleGameSession if found, None otherwise
+    """
+    # Get the challenge for the target date
+    challenge = db.query(WordleDailyChallenge).filter(
+        WordleDailyChallenge.date == target_date
+    ).first()
+    
+    if not challenge:
+        return None
+    
+    # Get the user's session for this challenge
+    session = db.query(WordleGameSession).filter(
+        and_(
+            WordleGameSession.user_id == user_id,
+            WordleGameSession.daily_challenge_id == challenge.id
+        )
+    ).first()
+    
+    return session
+
+
+def calculate_guess_results_for_session(db: Session, session: WordleGameSession) -> List[List[LetterResult]]:
+    """
+    Calculate the guess results (letter feedback) for all guesses in a session.
+    
+    Args:
+        db: Database session
+        session: The game session
+        
+    Returns:
+        List of guess results, one for each guess
+    """
+    # Get the answer from the daily challenge
+    challenge = db.query(WordleDailyChallenge).filter(
+        WordleDailyChallenge.id == session.daily_challenge_id
+    ).first()
+    
+    if not challenge:
+        return []
+    
+    # Calculate feedback for each guess
+    word_service = get_word_service()
+    results = []
+    
+    for guess in session.guesses:
+        feedback = word_service.check_guess(guess, challenge.word)
+        results.append(feedback)
+    
+    return results
 
 
 def can_play_today(db: Session, user_id: str) -> bool:

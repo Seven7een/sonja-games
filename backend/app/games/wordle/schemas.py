@@ -45,6 +45,7 @@ class GameSessionResponse(BaseModel):
     user_id: str
     daily_challenge_id: UUID
     guesses: List[str]
+    guess_results: Optional[List[List[LetterResult]]] = None  # Calculated feedback for each guess
     won: bool
     attempts_used: int
     completed_at: Optional[datetime]
