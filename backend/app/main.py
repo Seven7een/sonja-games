@@ -22,6 +22,9 @@ try:
     from app.games.wordle.router import router as wordle_router
     logger.info("✓ Wordle router imported successfully")
     
+    from app.games.crossword.router import router as crossword_router
+    logger.info("✓ Crossword router imported successfully")
+    
 except Exception as e:
     logger.error(f"❌ Failed to import modules: {e}")
     import traceback
@@ -48,6 +51,7 @@ app.add_middleware(
 logger.info("Registering routers...")
 app.include_router(auth_router)
 app.include_router(wordle_router)
+app.include_router(crossword_router)
 logger.info("Routers registered successfully")
 
 
