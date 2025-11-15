@@ -411,6 +411,8 @@ Required environment variables for the frontend service:
    VITE_CLERK_PUBLISHABLE_KEY=pk_live_...
    ```
    
+   **IMPORTANT:** These must be set as **regular variables** (not secrets) so they're available during the Docker build.
+   
    **Note:** Use your custom domain/subdomain for the API URL.
 
 5. Railway will automatically:

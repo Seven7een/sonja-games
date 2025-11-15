@@ -1,5 +1,14 @@
 [build]
 builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[[build.buildArgs]]
+name = "VITE_API_URL"
+value = "$VITE_API_URL"
+
+[[build.buildArgs]]
+name = "VITE_CLERK_PUBLISHABLE_KEY"
+value = "$VITE_CLERK_PUBLISHABLE_KEY"
 
 [deploy]
 startCommand = "nginx -g 'daemon off;'"
