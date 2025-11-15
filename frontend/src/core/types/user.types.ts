@@ -28,11 +28,9 @@ export interface UserSyncRequest {
 /**
  * User sync response
  * Returned from backend after syncing user
+ * Note: Backend returns User directly, not wrapped
  */
-export interface UserSyncResponse {
-  user: User;
-  message: string;
-}
+export type UserSyncResponse = User;
 
 /**
  * Partial user data for updates

@@ -16,8 +16,14 @@ export const Header = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
-  // Get display name and email - prioritize synced user data from backend
-  const displayName = user?.username || user?.email?.split('@')[0] || clerkUser?.username || clerkUser?.firstName || 'User';
+  // Get display name and email - prioritize first name, then username, then email prefix
+  const displayName = 
+    clerkUser?.firstName || 
+    user?.username || 
+    clerkUser?.username || 
+    user?.email?.split('@')[0] || 
+    clerkUser?.primaryEmailAddress?.emailAddress?.split('@')[0] || 
+    'User';
   const displayEmail = user?.email || clerkUser?.primaryEmailAddress?.emailAddress || '';
 
   const handleSignOut = async () => {

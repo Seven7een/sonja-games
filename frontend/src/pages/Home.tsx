@@ -11,7 +11,16 @@ import { useAuth } from '../core/hooks/useAuth';
  * Displays welcome message and game selection
  */
 export const Home = () => {
-  const { isAuthenticated, user, isLoading } = useAuth();
+  const { isAuthenticated, user, clerkUser, isLoading } = useAuth();
+  
+  // Get display name - prioritize first name
+  const displayName = 
+    clerkUser?.firstName || 
+    user?.username || 
+    clerkUser?.username || 
+    user?.email?.split('@')[0] || 
+    clerkUser?.primaryEmailAddress?.emailAddress?.split('@')[0] || 
+    'there';
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -31,7 +40,7 @@ export const Home = () => {
         </h1>
         {isAuthenticated ? (
           <p className="text-xl text-gray-600">
-            Hello, {user?.username || user?.email}! Choose a game to play.
+            Hello, {displayName}! Choose a game to play.
           </p>
         ) : (
           <p className="text-xl text-gray-600">

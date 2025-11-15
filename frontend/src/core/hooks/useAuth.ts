@@ -65,9 +65,9 @@ export const useAuth = (): UseAuthReturn => {
             
             console.log('✅ User sync response:', response);
             
-            // Use the synced user data from backend
-            setUser(response.user);
-            console.log('✅ User state updated:', response.user);
+            // Backend returns user directly
+            setUser(response);
+            console.log('✅ User state updated:', response);
           } catch (syncError) {
             console.error('❌ Failed to sync user with backend:', syncError);
             
