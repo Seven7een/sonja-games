@@ -10,6 +10,9 @@ import { SignIn as ClerkSignIn } from '@clerk/clerk-react';
  * Displays Clerk's sign-in interface with centered layout
  */
 export const SignIn = () => {
+  // Debug: Log when component renders
+  console.log('SignIn component rendered, current path:', window.location.pathname + window.location.hash);
+  
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <ClerkSignIn 

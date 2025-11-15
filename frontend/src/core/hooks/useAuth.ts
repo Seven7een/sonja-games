@@ -33,7 +33,7 @@ export interface UseAuthReturn {
  * Provides user data, auth state, and auth methods
  */
 export const useAuth = (): UseAuthReturn => {
-  const { user: clerkUser, isLoaded: isUserLoaded } = useUser();
+  const { user: clerkUser, isLoaded: isUserLoaded, isSignedIn } = useUser();
   const { signOut: clerkSignOut, getToken: clerkGetToken } = useClerkAuth();
   const [user, setUser] = useState<User | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -42,11 +42,19 @@ export const useAuth = (): UseAuthReturn => {
   // Update auth token and sync user when Clerk user changes
   useEffect(() => {
     const updateTokenAndSyncUser = async () => {
-      if (clerkUser) {
+      // Only proceed if user is fully signed in
+      if (clerkUser && isUserLoaded && isSignedIn) {
         try {
           const token = await clerkGetToken();
+          
+          // Skip sync if we don't have a valid token yet
+          if (!token) {
+            console.log('No token available yet, skipping sync');
+            return;
+          }
+          
           setAuthToken(token);
-          setHasToken(!!token);
+          setHasToken(true);
           
           // Sync user with backend
           setIsSyncing(true);
@@ -90,7 +98,7 @@ export const useAuth = (): UseAuthReturn => {
     };
 
     updateTokenAndSyncUser();
-  }, [clerkUser, clerkGetToken]); // Don't include lastSyncedUserId to avoid infinite loop
+  }, [clerkUser, clerkGetToken, isUserLoaded, isSignedIn]); // Don't include lastSyncedUserId to avoid infinite loop
 
   // Wrapper for sign out
   const signOut = async () => {
