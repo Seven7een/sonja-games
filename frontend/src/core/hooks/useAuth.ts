@@ -38,11 +38,12 @@ export const useAuth = (): UseAuthReturn => {
   const [user, setUser] = useState<User | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [hasToken, setHasToken] = useState(false);
+  const [lastSyncedUserId, setLastSyncedUserId] = useState<string | null>(null);
 
   // Update auth token and sync user when Clerk user changes
   useEffect(() => {
     const updateTokenAndSyncUser = async () => {
-      if (clerkUser) {
+      if (clerkUser && clerkUser.id !== lastSyncedUserId) {
         try {
           const token = await clerkGetToken();
           setAuthToken(token);
@@ -67,6 +68,7 @@ export const useAuth = (): UseAuthReturn => {
             
             // Backend returns user directly
             setUser(response);
+            setLastSyncedUserId(clerkUser.id);
             console.log('✅ User state updated:', response);
           } catch (syncError) {
             console.error('❌ Failed to sync user with backend:', syncError);
@@ -95,11 +97,12 @@ export const useAuth = (): UseAuthReturn => {
         setHasToken(false);
         setUser(null);
         setIsSyncing(false);
+        setLastSyncedUserId(null);
       }
     };
 
     updateTokenAndSyncUser();
-  }, [clerkUser, clerkGetToken]);
+  }, [clerkUser, clerkGetToken, lastSyncedUserId]);
 
   // Wrapper for sign out
   const signOut = async () => {
