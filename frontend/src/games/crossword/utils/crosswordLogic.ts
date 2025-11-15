@@ -6,7 +6,6 @@
 import {
   Cell,
   CellPosition,
-  CellState,
   CellStatus,
   Direction,
   GridData,

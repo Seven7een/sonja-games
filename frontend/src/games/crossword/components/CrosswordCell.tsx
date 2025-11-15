@@ -17,7 +17,6 @@ interface CrosswordCellProps {
 }
 
 export default function CrosswordCell({
-  letter,
   userLetter,
   number,
   isBlack,

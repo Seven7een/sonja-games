@@ -6,6 +6,7 @@ import { SignUp } from './core/components/auth/SignUp';
 import { Home } from './pages/Home';
 import WordleGame from './games/wordle/pages/WordleGame';
 import WordleStats from './games/wordle/pages/WordleStats';
+import { CrosswordGame, CrosswordStats } from './games/crossword/pages';
 
 /**
  * Protected Route wrapper
@@ -60,6 +61,26 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <WordleStats />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/crossword"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CrosswordGame />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/crossword/stats"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CrosswordStats />
               </Layout>
             </ProtectedRoute>
           }

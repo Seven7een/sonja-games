@@ -18,7 +18,6 @@ interface CrosswordGridProps {
 export default function CrosswordGrid({
   grid,
   selectedCell,
-  selectedDirection,
   onCellClick,
   onKeyPress
 }: CrosswordGridProps) {
