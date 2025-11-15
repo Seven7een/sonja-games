@@ -10,8 +10,7 @@ ENV/
 .env
 *.db
 *.sqlite3
-alembic/versions/*.py
-!alembic/versions/__init__.py
+# Don't ignore migration files - we need them in production!
 .pytest_cache/
 .coverage
 htmlcov/
