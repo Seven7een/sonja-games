@@ -174,7 +174,7 @@ export interface CheckCellResponse {
  * Response for revealing entire board
  */
 export interface RevealAllResponse {
-  complete_grid: Record<string, any>;
+  complete_grid: string[][];  // 2D array of letters and black cells
   answers_across: Record<string, string>;
   answers_down: Record<string, string>;
 }

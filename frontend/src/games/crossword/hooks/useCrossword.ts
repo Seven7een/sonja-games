@@ -429,7 +429,15 @@ export function useCrossword(): UseCrosswordReturn {
    * Reveal letter (hint)
    */
   const revealLetter = useCallback(async () => {
-    if (!state.session || !state.selectedCell || state.isCompleted) return;
+    if (!state.session || !state.selectedCell || state.isCompleted || !state.userGrid) return;
+    
+    // Check if selected cell is a black cell
+    const { row, col } = state.selectedCell;
+    const selectedCellData = state.userGrid[row]?.[col];
+    if (selectedCellData?.isBlack) {
+      console.warn('Cannot reveal black cell');
+      return;
+    }
     
     try {
       const result = await crosswordApi.revealCell(state.session.id, state.selectedCell);
@@ -459,7 +467,7 @@ export function useCrossword(): UseCrosswordReturn {
     } catch (error: any) {
       console.error('Failed to reveal letter:', error);
     }
-  }, [state.session, state.selectedCell, state.isCompleted]);
+  }, [state.session, state.selectedCell, state.isCompleted, state.userGrid]);
   
   /**
    * Check letter (validate selected cell)

@@ -43,6 +43,7 @@ async def get_daily_puzzle(
     """
     Get today's daily crossword puzzle.
     Returns the puzzle with grid structure and clues (without answers).
+    Grid only shows black cells ("."), not the letters.
     
     Args:
         db: Database session
@@ -58,10 +59,19 @@ async def get_daily_puzzle(
         today = date.today()
         puzzle = await service.get_or_create_daily_puzzle(db, today)
         
+        # Create sanitized grid - only show structure (black cells), not letters
+        sanitized_grid = []
+        for row in puzzle.grid_data:
+            sanitized_row = []
+            for cell in row:
+                # Keep black cells as ".", replace letters with empty string
+                sanitized_row.append("." if cell == "." else "")
+            sanitized_grid.append(sanitized_row)
+        
         return PuzzleInfo(
             puzzle_id=puzzle.id,
             date=puzzle.date,
-            grid_data=puzzle.grid_data,
+            grid_data=sanitized_grid,  # Send sanitized grid without answers
             clues_across=puzzle.clues_across,
             clues_down=puzzle.clues_down
         )

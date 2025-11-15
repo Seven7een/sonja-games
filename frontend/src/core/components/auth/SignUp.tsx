@@ -23,10 +23,10 @@ export const SignUp = () => {
         </div>
         <div className="flex justify-center">
           <ClerkSignUp 
-            routing="hash"
+            routing="path"
+            path="/sign-up"
             signInUrl="/sign-in"
             afterSignUpUrl="/"
-            redirectUrl="/"
           />
         </div>
       </div>

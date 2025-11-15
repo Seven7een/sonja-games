@@ -373,18 +373,39 @@ export function getCellStatusClass(status: CellStatus): string {
 
 /**
  * Parse grid data from backend format to GridData
- * Backend sends grid as nested arrays or object structure
+ * Backend sends grid as 2D array of strings where:
+ * - Empty string "" represents answer cells (letters not revealed)
+ * - Letters (A-Z) represent revealed answer cells
+ * - "." represents black cells
  * 
- * @param gridData - Grid data from backend
- * @returns Parsed GridData
+ * @param gridData - Grid data from backend (string[][] or Record)
+ * @returns Parsed GridData with Cell objects
  */
-export function parseGridData(gridData: Record<string, any>): GridData {
-  // If gridData is already an array, return it
+export function parseGridData(gridData: string[][] | Record<string, any>): GridData {
+  // If gridData is an array of strings (backend format)
   if (Array.isArray(gridData)) {
-    return gridData as GridData;
+    const grid: GridData = [];
+    
+    for (let row = 0; row < gridData.length; row++) {
+      grid[row] = [];
+      for (let col = 0; col < gridData[row].length; col++) {
+        const cellValue = gridData[row][col];
+        
+        // Check if this is a black cell
+        const isBlack = cellValue === '.';
+        
+        grid[row][col] = {
+          letter: isBlack ? null : (cellValue || null),  // Empty string becomes null
+          number: undefined, // Will be calculated separately if needed
+          isBlack: isBlack,
+        };
+      }
+    }
+    
+    return grid;
   }
   
-  // Otherwise, construct a 5x5 grid from the object structure
+  // Otherwise, construct a 5x5 grid from the object structure (legacy format)
   const grid: GridData = [];
   for (let row = 0; row < 5; row++) {
     grid[row] = [];

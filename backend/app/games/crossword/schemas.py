@@ -8,7 +8,7 @@ class PuzzleInfo(BaseModel):
     """Information about a crossword puzzle (without answers)"""
     puzzle_id: UUID
     date: date
-    grid_data: Dict  # 5x5 grid structure
+    grid_data: List[List[str]]  # 5x5 grid structure (2D array)
     clues_across: Dict[str, str]  # {number: clue_text}
     clues_down: Dict[str, str]  # {number: clue_text}
 
@@ -17,7 +17,7 @@ class PuzzleResponse(BaseModel):
     """Full puzzle response including answers (for admin/testing)"""
     id: UUID
     date: date
-    grid_data: Dict
+    grid_data: List[List[str]]  # 5x5 grid structure (2D array)
     clues_across: Dict[str, str]
     clues_down: Dict[str, str]
     answers_across: Dict[str, str]
@@ -127,6 +127,6 @@ class CheckCellResponse(BaseModel):
 
 class RevealAllResponse(BaseModel):
     """Response for revealing entire board"""
-    complete_grid: Dict
+    complete_grid: List[List[str]]  # 5x5 grid structure (2D array)
     answers_across: Dict[str, str]
     answers_down: Dict[str, str]

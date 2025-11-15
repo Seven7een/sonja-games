@@ -87,8 +87,10 @@ class BedrockClient:
                 raise ValueError(f"Unsupported model response format")
             
             # Parse JSON from text
-            # Handle cases where model wraps JSON in markdown code blocks
+            # Handle cases where model wraps JSON in markdown code blocks or adds preamble
             text = text.strip()
+            
+            # Remove markdown code blocks
             if text.startswith("```json"):
                 text = text[7:]
             if text.startswith("```"):
@@ -96,6 +98,13 @@ class BedrockClient:
             if text.endswith("```"):
                 text = text[:-3]
             text = text.strip()
+            
+            # Find the JSON object - look for the first { and last }
+            start_idx = text.find('{')
+            end_idx = text.rfind('}')
+            
+            if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                text = text[start_idx:end_idx + 1]
             
             return json.loads(text)
             
@@ -128,62 +137,81 @@ def generate_crossword_prompt() -> str:
     Returns:
         str: Formatted prompt for the LLM
     """
-    prompt = """Generate a mini crossword puzzle with these requirements:
+    prompt = """Create a 5x5 crossword puzzle. Follow these rules EXACTLY:
 
-GRID SPECIFICATIONS:
-- Maximum 5x5 grid
-- Use "." for black/empty cells
-- Use uppercase letters for answer cells
-- Words must intersect logically at shared letters
-- Minimum 3 words across and 3 words down
-- Words can include proper nouns, puns, slang, and creative wordplay as long as clues are clear
+1. Grid is 5x5 (5 rows, 5 columns)
+2. Use "." for black squares
+3. Use A-Z for letters
+4. ALL words must be real English words (3-5 letters)
+5. Words are separated by "." or grid edges
+6. The "answers" must be the EXACT letters from the grid
 
-CLUE REQUIREMENTS:
-- Write clever, concise clues (5-15 words each)
-- Clues should be challenging but fair
-- Use wordplay, definitions, or cultural references
-- Number clues starting from top-left, reading left-to-right, top-to-bottom
+HOW TO EXTRACT ANSWERS FROM GRID:
+- Across: Read each row left-to-right, extract words between "." or edges
+- Down: Read each column top-to-bottom, extract words between "." or edges
+- Words must be 3+ letters (skip 1-2 letter sequences)
 
-OUTPUT FORMAT (JSON):
+EXAMPLE:
+
+Grid:
+```
+B A T . .
+I . O P S
+G O T . .
+. . . . .
+. . . . .
+```
+
+Extract Across (row by row, left-to-right):
+- Row 0: "BAT" (cols 0-2), then "." → Answer: "BAT"
+- Row 1: "I" (col 0, too short), then ".", then "OPS" (cols 2-4) → Answer: "OPS"  
+- Row 2: "GOT" (cols 0-2), then "." → Answer: "GOT"
+
+Extract Down (column by column, top-to-bottom):
+- Col 0: "BIG" (rows 0-2) → Answer: "BIG"
+- Col 1: "A" (row 0, too short), then ".", then "O" (row 2, too short)
+- Col 2: "TOT" (rows 0-2) → Answer: "TOT"
+- Col 3: "." then "P" (too short)
+- Col 4: "." then "S" (too short)
+
+JSON:
 {
   "grid": [
-    ["A", "H", "A", ".", "."],
-    ["S", "W", "A", "N", "."],
-    ["B", "O", "A", "R", "D"],
-    ["O", "N", "K", "E", "Y"],
-    ["A", "G", "E", "S", "."]
+    ["B", "A", "T", ".", "."],
+    ["I", ".", "O", "P", "S"],
+    ["G", "O", "T", ".", "."],
+    [".", ".", ".", ".", "."],
+    [".", ".", ".", ".", "."]
   ],
   "clues_across": {
-    "1": "___ moment (instance when inspiration strikes)",
-    "4": "With 4 down, term for a farewell performance",
-    "5": "Get on a ship",
-    "6": "Not out of tune",
-    "7": "Years and years"
+    "1": "Flying mammal",
+    "4": "Police officers, informally",
+    "5": "Obtained or received"
   },
   "clues_down": {
-    "1": "No longer slumbering",
-    "2": "Rabbits long eared relatives",
-    "3": "Warhol known for his soup can art",
-    "4": "See 4 across",
-    "5": "Constricting snake"
+    "1": "Large in size",
+    "3": "Small child"
   },
   "answers_across": {
-    "1": "AHA",
-    "4": "SWAN",
-    "5": "BOARD",
-    "6": "ONKEY",
-    "7": "AGES"
+    "1": "BAT",
+    "4": "OPS",
+    "5": "GOT"
   },
   "answers_down": {
-    "1": "AWAKE",
-    "2": "HARES",
-    "3": "WARHOL",
-    "4": "SONG",
-    "5": "BOA"
+    "1": "BIG",
+    "3": "TOT"
   }
 }
 
-Generate a unique, creative crossword puzzle now. Return ONLY the JSON, no other text."""
+CRITICAL CHECKLIST:
+✓ Grid is exactly 5x5
+✓ All across answers are real words found by reading grid left-to-right
+✓ All down answers are real words found by reading grid top-to-bottom  
+✓ Answers are 3-5 letters
+✓ Every answer has a clue
+✓ Clues match the answers
+
+Now create your puzzle. Return ONLY the JSON, no other text:"""
     
     return prompt
 
