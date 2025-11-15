@@ -12,11 +12,17 @@ echo "Database URL: ${DATABASE_URL:0:30}..."
 echo "========================================="
 
 echo ""
+echo "📦 Current working directory:"
+pwd
+echo ""
+echo "📦 Listing files in current directory:"
+ls -la
+echo ""
+echo "📦 Checking if alembic directory exists:"
+ls -la alembic/ || echo "alembic directory not found!"
+echo ""
 echo "📦 Checking database migration status..."
 alembic current || echo "No migrations applied yet"
-echo ""
-echo "📦 Listing migration files in alembic/versions:"
-ls -la alembic/versions/
 echo ""
 echo "📦 Available migrations:"
 alembic history
