@@ -12,8 +12,25 @@ echo "Database URL: ${DATABASE_URL:0:30}..."
 echo "========================================="
 
 echo ""
+echo "📦 Checking database migration status..."
+alembic current -v || echo "No migrations applied yet"
+echo ""
+echo "📦 Available migrations:"
+alembic history
+echo ""
+
+# Check if we should reset the database (one-time flag)
+if [ "$RESET_DATABASE" = "true" ]; then
+    echo "⚠️  RESET_DATABASE flag detected - dropping all tables..."
+    alembic downgrade base || echo "Already at base"
+    echo "✓ Database reset complete"
+fi
+
 echo "📦 Running database migrations..."
-alembic upgrade head
+alembic upgrade head -v
+echo ""
+echo "📦 Current migration version:"
+alembic current -v
 echo "✓ Migrations complete"
 
 echo ""
