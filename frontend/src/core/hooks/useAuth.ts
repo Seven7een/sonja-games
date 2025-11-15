@@ -51,16 +51,25 @@ export const useAuth = (): UseAuthReturn => {
           // Sync user with backend
           setIsSyncing(true);
           try {
+            console.log('🔄 Syncing user with backend...', {
+              id: clerkUser.id,
+              email: clerkUser.primaryEmailAddress?.emailAddress,
+              username: clerkUser.username
+            });
+            
             const response = await syncUser(
               clerkUser.id,
               clerkUser.primaryEmailAddress?.emailAddress || '',
               clerkUser.username || undefined
             );
             
+            console.log('✅ User sync response:', response);
+            
             // Use the synced user data from backend
             setUser(response.user);
+            console.log('✅ User state updated:', response.user);
           } catch (syncError) {
-            console.error('Failed to sync user with backend:', syncError);
+            console.error('❌ Failed to sync user with backend:', syncError);
             
             // Fallback: Map Clerk user to our User type
             const mappedUser: User = {

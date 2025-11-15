@@ -12,9 +12,13 @@ import { useState } from 'react';
  * Displays app title, navigation links, and user menu with logout
  */
 export const Header = () => {
-  const { user, isAuthenticated, signOut } = useAuth();
+  const { user, clerkUser, isAuthenticated, signOut } = useAuth();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  // Get display name and email - prioritize synced user data from backend
+  const displayName = user?.username || user?.email?.split('@')[0] || clerkUser?.username || clerkUser?.firstName || 'User';
+  const displayEmail = user?.email || clerkUser?.primaryEmailAddress?.emailAddress || '';
 
   const handleSignOut = async () => {
     await signOut();
@@ -58,7 +62,7 @@ export const Header = () => {
                   className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
                 >
                   <span className="hidden sm:inline">
-                    {user?.username || user?.email || 'User'}
+                    {displayName}
                   </span>
                   <svg
                     className="w-5 h-5"
@@ -87,8 +91,8 @@ export const Header = () => {
                     {/* Menu */}
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 border border-gray-200">
                       <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-200">
-                        <div className="font-medium">{user?.username || 'User'}</div>
-                        <div className="text-gray-500 truncate">{user?.email}</div>
+                        <div className="font-medium">{displayName}</div>
+                        <div className="text-gray-500 truncate">{displayEmail}</div>
                       </div>
                       <button
                         onClick={handleSignOut}
