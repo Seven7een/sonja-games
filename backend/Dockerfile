@@ -33,6 +33,9 @@ COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
 # Copy application code
 COPY --chown=appuser:appuser . .
 
+# Make start script executable
+RUN chmod +x start.sh
+
 # Switch to non-root user
 USER appuser
 
