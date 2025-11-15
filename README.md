@@ -277,6 +277,232 @@ See the design document in `.kiro/specs/minigame-platform/design.md` for detaile
 4. Commit code and migration files
 5. Push and create a pull request
 
+## Environment Variables
+
+### Backend Environment Variables
+
+Required environment variables for the backend service:
+
+| Variable | Description | Example | Required |
+|----------|-------------|---------|----------|
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@host:5432/dbname` | Yes |
+| `CLERK_SECRET_KEY` | Clerk API secret key for token verification | `sk_test_...` | Yes |
+| `CLERK_PUBLISHABLE_KEY` | Clerk publishable key | `pk_test_...` | Yes |
+| `ENVIRONMENT` | Environment name | `development`, `production` | Yes |
+| `CORS_ORIGINS` | Comma-separated list of allowed origins | `http://localhost:5173,https://app.example.com` | Yes |
+| `PORT` | Port for the backend server (Railway sets this automatically) | `8000` | No (defaults to 8000) |
+
+### Frontend Environment Variables
+
+Required environment variables for the frontend service:
+
+| Variable | Description | Example | Required |
+|----------|-------------|---------|----------|
+| `VITE_API_URL` | Backend API URL | `https://api.example.com` | Yes |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Clerk publishable key | `pk_test_...` | Yes |
+
+**Note:** Frontend environment variables must be prefixed with `VITE_` to be accessible in the browser.
+
+### Setting Environment Variables Locally
+
+1. Copy the example files:
+   ```bash
+   cp backend/.env.example backend/.env
+   cp frontend/.env.example frontend/.env
+   ```
+
+2. Edit the `.env` files with your actual values
+
+3. Restart the development environment:
+   ```bash
+   make dev-down
+   make dev
+   ```
+
+## Deployment to Railway
+
+### Prerequisites
+
+1. [Railway account](https://railway.app/)
+2. Clerk account with API keys
+3. Git repository with your code
+
+### Deployment Steps
+
+#### 1. Create a New Railway Project
+
+1. Go to [Railway Dashboard](https://railway.app/dashboard)
+2. Click "New Project"
+3. Select "Deploy from GitHub repo"
+4. Choose your repository
+
+#### 2. Add PostgreSQL Database
+
+1. In your Railway project, click "New"
+2. Select "Database" → "PostgreSQL"
+3. Railway will automatically create a `DATABASE_URL` variable
+
+#### 3. Deploy Backend Service
+
+1. Click "New" → "GitHub Repo"
+2. Select your repository
+3. Configure the service:
+   - **Name:** `backend`
+   - **Root Directory:** `backend`
+   - **Build Command:** (Handled by Dockerfile)
+   - **Start Command:** (Handled by railway.toml)
+
+4. Add environment variables:
+   ```
+   CLERK_SECRET_KEY=sk_live_...
+   CLERK_PUBLISHABLE_KEY=pk_live_...
+   ENVIRONMENT=production
+   CORS_ORIGINS=https://your-frontend-url.railway.app
+   ```
+
+5. Railway will automatically:
+   - Detect the `railway.toml` configuration
+   - Build using the Dockerfile
+   - Run database migrations on startup
+   - Expose the service with a public URL
+
+6. Copy the backend URL (e.g., `https://backend-production-xxxx.up.railway.app`)
+
+#### 4. Deploy Frontend Service
+
+1. Click "New" → "GitHub Repo"
+2. Select your repository again
+3. Configure the service:
+   - **Name:** `frontend`
+   - **Root Directory:** `frontend`
+   - **Build Command:** (Handled by Dockerfile)
+   - **Start Command:** (Handled by railway.toml)
+
+4. Add environment variables:
+   ```
+   VITE_API_URL=https://backend-production-xxxx.up.railway.app
+   VITE_CLERK_PUBLISHABLE_KEY=pk_live_...
+   ```
+
+5. Railway will automatically:
+   - Build the React app with Vite
+   - Serve static files with Nginx
+   - Expose the service with a public URL
+
+#### 5. Update CORS Origins
+
+1. Go back to your backend service settings
+2. Update the `CORS_ORIGINS` variable with your frontend URL:
+   ```
+   CORS_ORIGINS=https://frontend-production-xxxx.up.railway.app
+   ```
+
+3. Redeploy the backend service
+
+#### 6. Configure Custom Domain (Optional)
+
+1. In Railway, go to your frontend service
+2. Click "Settings" → "Domains"
+3. Add your custom domain
+4. Update DNS records as instructed
+5. Update `CORS_ORIGINS` in backend with your custom domain
+
+### Deployment Architecture
+
+```
+┌─────────────────┐
+│   Railway       │
+│                 │
+│  ┌───────────┐  │
+│  │ Frontend  │  │ ← Nginx serving React SPA
+│  │ (Port 80) │  │
+│  └─────┬─────┘  │
+│        │        │
+│        ▼        │
+│  ┌───────────┐  │
+│  │  Backend  │  │ ← FastAPI + Uvicorn
+│  │ (Port $)  │  │
+│  └─────┬─────┘  │
+│        │        │
+│        ▼        │
+│  ┌───────────┐  │
+│  │PostgreSQL │  │ ← Managed database
+│  │(Port 5432)│  │
+│  └───────────┘  │
+│                 │
+└─────────────────┘
+```
+
+### Monitoring and Logs
+
+**View logs in Railway:**
+1. Click on a service
+2. Go to "Deployments" tab
+3. Click on the latest deployment
+4. View real-time logs
+
+**Health checks:**
+- Backend: `https://your-backend-url.railway.app/health`
+- Frontend: `https://your-frontend-url.railway.app/`
+
+### Troubleshooting Deployment
+
+**Backend won't start:**
+- Check environment variables are set correctly
+- Verify `DATABASE_URL` is available
+- Check logs for migration errors
+- Ensure Clerk keys are valid
+
+**Frontend shows API errors:**
+- Verify `VITE_API_URL` points to backend URL
+- Check CORS settings in backend
+- Ensure backend is running and healthy
+
+**Database connection errors:**
+- Verify PostgreSQL service is running
+- Check `DATABASE_URL` format
+- Ensure backend and database are in same project
+
+**Migrations fail:**
+- Check database permissions
+- Verify Alembic configuration
+- Review migration files for errors
+
+### Rolling Back Deployments
+
+1. Go to service in Railway
+2. Click "Deployments" tab
+3. Find previous successful deployment
+4. Click "Redeploy"
+
+### CI/CD
+
+Railway automatically deploys when you push to your main branch:
+
+1. Push code to GitHub
+2. Railway detects changes
+3. Builds and deploys automatically
+4. Runs health checks
+5. Routes traffic to new deployment
+
+To disable auto-deploy:
+1. Go to service settings
+2. Uncheck "Auto Deploy"
+
+## Production Checklist
+
+Before going live, ensure:
+
+- [ ] All environment variables are set with production values
+- [ ] Clerk is configured with production keys
+- [ ] CORS origins include your production domain
+- [ ] Database backups are enabled in Railway
+- [ ] Custom domain is configured (if applicable)
+- [ ] SSL/HTTPS is working (Railway provides this automatically)
+- [ ] Health check endpoints are responding
+- [ ] Error tracking is set up (optional: Sentry, etc.)
+- [ ] Monitoring is configured (Railway provides basic metrics)
+
 ## License
 
 [Your License Here]
