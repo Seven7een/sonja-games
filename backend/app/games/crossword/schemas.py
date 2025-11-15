@@ -37,6 +37,9 @@ class GameSessionResponse(BaseModel):
     completed: bool
     completion_time_seconds: Optional[int]
     completed_at: Optional[datetime]
+    revealed_cells: Optional[List[Dict[str, int]]]  # List of {row, col}
+    hints_used: int
+    revealed_all: bool
     created_at: datetime
     
     class Config:
@@ -71,6 +74,8 @@ class CrosswordStats(BaseModel):
     average_completion_time_seconds: Optional[float]
     current_streak: int
     max_streak: int
+    average_hints_used: Optional[float]
+    puzzles_revealed: int  # Count of puzzles where reveal_all was used
 
 
 class GameHistoryItem(BaseModel):
@@ -91,3 +96,37 @@ class GameHistoryResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class CellPosition(BaseModel):
+    """Position of a cell in the grid"""
+    row: int = Field(..., ge=0, lt=5, description="Row index (0-4)")
+    col: int = Field(..., ge=0, lt=5, description="Column index (0-4)")
+
+
+class RevealCellResponse(BaseModel):
+    """Response for revealing a cell"""
+    letter: str = Field(..., min_length=1, max_length=1, description="Correct letter for the cell")
+    row: int
+    col: int
+
+
+class CheckCellRequest(BaseModel):
+    """Request to check if a cell is correct"""
+    row: int = Field(..., ge=0, lt=5)
+    col: int = Field(..., ge=0, lt=5)
+    letter: str = Field(..., min_length=1, max_length=1)
+
+
+class CheckCellResponse(BaseModel):
+    """Response for checking a cell"""
+    is_correct: bool
+    row: int
+    col: int
+
+
+class RevealAllResponse(BaseModel):
+    """Response for revealing entire board"""
+    complete_grid: Dict
+    answers_across: Dict[str, str]
+    answers_down: Dict[str, str]

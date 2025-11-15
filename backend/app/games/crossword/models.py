@@ -37,6 +37,9 @@ class CrosswordGameSession(Base):
     completed = Column(Boolean, nullable=False, default=False)
     completion_time_seconds = Column(Integer, nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
+    revealed_cells = Column(JSON, nullable=True, default=list)  # List of revealed cell coordinates [{row, col}]
+    hints_used = Column(Integer, nullable=False, default=0)  # Count of hints used (reveal letter, check letter)
+    revealed_all = Column(Boolean, nullable=False, default=False)  # Whether user revealed entire board
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
     
     # Relationships
@@ -44,4 +47,4 @@ class CrosswordGameSession(Base):
     daily_puzzle = relationship("CrosswordDailyPuzzle", back_populates="game_sessions")
     
     def __repr__(self):
-        return f"<CrosswordGameSession(id={self.id}, user_id={self.user_id}, completed={self.completed})>"
+        return f"<CrosswordGameSession(id={self.id}, user_id={self.user_id}, completed={self.completed}, hints_used={self.hints_used})>"
