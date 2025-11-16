@@ -171,7 +171,8 @@ def submit_guess(
         is_correct=is_correct,
         attempts_used=session.attempts_used,
         game_over=game_over,
-        won=won
+        won=won,
+        answer=challenge.word if game_over else None  # Only reveal answer when game is over
     )
 
 

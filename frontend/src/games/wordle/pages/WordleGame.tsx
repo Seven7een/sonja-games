@@ -27,6 +27,7 @@ export default function WordleGame() {
     guessResults,
     gameStatus,
     keyboardState,
+    answer,
     
     // UI state
     isLoading,
@@ -78,9 +79,11 @@ export default function WordleGame() {
    */
   useEffect(() => {
     if (gameStatus === 'won' || gameStatus === 'lost') {
-      // For won games, the answer is the last guess
-      // For lost games, we'll need to get it from the API or show a placeholder
-      if (gameStatus === 'won' && guesses.length > 0) {
+      // Use the answer from the hook (provided by API when game is over)
+      if (answer) {
+        setAnswerWord(answer.toUpperCase());
+      } else if (gameStatus === 'won' && guesses.length > 0) {
+        // Fallback for won games - use the last guess
         setAnswerWord(guesses[guesses.length - 1]);
       }
       
@@ -90,7 +93,7 @@ export default function WordleGame() {
         .catch(err => console.error('Failed to fetch stats:', err))
         .finally(() => setShowGameOverModal(true));
     }
-  }, [gameStatus, guesses]);
+  }, [gameStatus, answer, guesses]);
 
   /**
    * Handle viewing full statistics

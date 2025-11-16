@@ -56,6 +56,9 @@ export const useAuth = (): UseAuthReturn => {
           setAuthToken(token);
           setHasToken(true);
           
+          // Store token getter function for API interceptor to use
+          (window as any).__CLERK_GET_TOKEN__ = clerkGetToken;
+          
           // Sync user with backend
           setIsSyncing(true);
           try {
@@ -94,6 +97,7 @@ export const useAuth = (): UseAuthReturn => {
         setHasToken(false);
         setUser(null);
         setIsSyncing(false);
+        (window as any).__CLERK_GET_TOKEN__ = null;
       }
     };
 

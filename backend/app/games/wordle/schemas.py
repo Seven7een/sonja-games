@@ -26,6 +26,7 @@ class GuessResult(BaseModel):
     attempts_used: int
     game_over: bool
     won: Optional[bool] = None
+    answer: Optional[str] = None  # Only provided when game is over
 
 
 class GuessSubmission(BaseModel):

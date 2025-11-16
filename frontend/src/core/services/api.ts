@@ -30,14 +30,27 @@ const createApiClient = (): AxiosInstance => {
   // Request interceptor - inject authentication token
   instance.interceptors.request.use(
     async (config) => {
-      // Get Clerk token if available
-      // This will be set by the auth hook when Clerk is initialized
-      const token = (window as any).__CLERK_TOKEN__;
+      // Get fresh Clerk token if available
+      // Call the token getter function to get a fresh token
+      const getToken = (window as any).__CLERK_GET_TOKEN__;
       
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      if (getToken && typeof getToken === 'function') {
+        try {
+          const token = await getToken();
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+          }
+        } catch (error) {
+          console.error('Failed to get fresh token:', error);
+        }
       } else {
-        console.warn('⚠️ No auth token available for request:', config.url);
+        // Fallback to stored token
+        const token = (window as any).__CLERK_TOKEN__;
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        } else {
+          console.warn('⚠️ No auth token available for request:', config.url);
+        }
       }
 
       return config;

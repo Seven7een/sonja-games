@@ -36,6 +36,7 @@ interface WordleGameState {
   guessResults: LetterResult[][];
   gameStatus: GameStatus;
   keyboardState: KeyboardState;
+  answer: string | null;  // The correct answer (only available when game is over)
   
   // UI state
   isLoading: boolean;
@@ -78,6 +79,7 @@ export const useWordle = (): UseWordleReturn => {
   const [keyboardState, setKeyboardState] = useState<KeyboardState>(
     initializeKeyboardState()
   );
+  const [answer, setAnswer] = useState<string | null>(null);
   
   // UI state
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -213,6 +215,10 @@ export const useWordle = (): UseWordleReturn => {
       
       // Check if game is over
       if (result.game_over) {
+        if (result.answer) {
+          setAnswer(result.answer);
+        }
+        
         if (result.won) {
           setGameStatus('won');
           setMessage('Congratulations! You won!');
@@ -326,6 +332,7 @@ export const useWordle = (): UseWordleReturn => {
     guessResults,
     gameStatus,
     keyboardState,
+    answer,
     
     // UI state
     isLoading,
