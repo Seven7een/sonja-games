@@ -2,6 +2,9 @@
 .kiro/
 old/
 
+# Admin tools (contains sensitive database operations)
+admin-tools/
+
 # Environment variables
 .env
 .env.local
