@@ -36,18 +36,23 @@ const createApiClient = (): AxiosInstance => {
       
       if (getToken && typeof getToken === 'function') {
         try {
-          const token = await getToken();
+          // Force Clerk to skip cache and get a fresh token if needed
+          const token = await getToken({ skipCache: false });
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
+            console.log('🔑 Token added to request:', config.url);
+          } else {
+            console.warn('⚠️ getToken() returned null for request:', config.url);
           }
         } catch (error) {
-          console.error('Failed to get fresh token:', error);
+          console.error('❌ Failed to get fresh token:', error);
         }
       } else {
         // Fallback to stored token
         const token = (window as any).__CLERK_TOKEN__;
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
+          console.log('🔑 Using stored token for request:', config.url);
         } else {
           console.warn('⚠️ No auth token available for request:', config.url);
         }
@@ -84,7 +89,9 @@ const createApiClient = (): AxiosInstance => {
         switch (error.response.status) {
           case 401:
             // Unauthorized - token expired or invalid
-            console.warn('Authentication required or token expired');
+            console.error('❌ 401 Unauthorized - Token may be invalid or expired');
+            console.error('   Request URL:', error.config?.url);
+            console.error('   Error detail:', apiError.detail);
             // Could trigger logout or token refresh here
             break;
           case 403:
