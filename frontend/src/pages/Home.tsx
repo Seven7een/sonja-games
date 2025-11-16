@@ -84,38 +84,22 @@ export const Home = () => {
           </div>
         </Link>
 
-        {/* Crossword Game Card */}
-        <Link
-          to={isAuthenticated ? '/crossword' : '/sign-in'}
-          className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200"
-        >
+        {/* Crossword Game Card - Coming Soon */}
+        <div className="p-6 bg-gray-50 rounded-lg shadow-md border border-gray-200 opacity-60">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-gray-900">Mini Crossword</h2>
-            <span className="px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full">
-              Available
+            <h2 className="text-2xl font-bold text-gray-500">Mini Crossword</h2>
+            <span className="px-3 py-1 bg-gray-200 text-gray-600 text-sm font-medium rounded-full">
+              Coming Soon
             </span>
           </div>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-500 mb-4">
             Solve a daily AI-generated 5x5 crossword puzzle. Test your vocabulary
             and problem-solving skills with fresh challenges every day.
           </p>
-          <div className="flex items-center text-blue-600 font-medium">
-            Play Now
-            <svg
-              className="w-5 h-5 ml-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
+          <div className="flex items-center text-gray-400 font-medium">
+            Coming Soon
           </div>
-        </Link>
+        </div>
       </div>
 
       {/* Sign In Prompt for Unauthenticated Users */}

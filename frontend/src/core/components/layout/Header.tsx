@@ -52,12 +52,6 @@ export const Header = () => {
                   Wordle
                 </Link>
                 <Link
-                  to="/crossword"
-                  className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
-                >
-                  Crossword
-                </Link>
-                <Link
                   to="/wordle/stats"
                   className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
                 >
