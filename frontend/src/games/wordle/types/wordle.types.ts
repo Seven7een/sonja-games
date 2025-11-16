@@ -30,6 +30,7 @@ export interface GuessResult {
   attempts_used: number;
   game_over: boolean;
   won: boolean | null;
+  answer?: string;  // Only provided when game is over
 }
 
 /**
