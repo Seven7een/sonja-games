@@ -65,6 +65,7 @@ export interface GameSession {
   attempts_used: number;
   completed_at: string | null;
   created_at: string;
+  answer?: string;  // Only provided when game is completed
 }
 
 /**

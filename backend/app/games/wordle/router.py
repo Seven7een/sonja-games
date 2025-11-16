@@ -117,6 +117,15 @@ async def get_todays_session(
         # Fallback for old sessions without stored results
         guess_results = service.calculate_guess_results_for_session(db, session)
     
+    # Get the answer if game is completed
+    answer = None
+    if session.completed_at:
+        challenge = db.query(service.WordleDailyChallenge).filter(
+            service.WordleDailyChallenge.id == session.daily_challenge_id
+        ).first()
+        if challenge:
+            answer = challenge.word
+    
     # Create response with guess results
     response = GameSessionResponse(
         id=session.id,
@@ -127,7 +136,8 @@ async def get_todays_session(
         won=session.won,
         attempts_used=session.attempts_used,
         completed_at=session.completed_at,
-        created_at=session.created_at
+        created_at=session.created_at,
+        answer=answer
     )
     
     return response

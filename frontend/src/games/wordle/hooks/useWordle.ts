@@ -119,13 +119,19 @@ export const useWordle = (): UseWordleReturn => {
         }
         setKeyboardState(kbState);
         
-        // Set game status
+        // Set game status and answer if completed
         if (session.won) {
           setGameStatus('won');
           setMessage('Congratulations! You won!');
+          if (session.answer) {
+            setAnswer(session.answer);
+          }
         } else if (session.completed_at) {
           setGameStatus('lost');
           setMessage('Game over! Better luck next time.');
+          if (session.answer) {
+            setAnswer(session.answer);
+          }
         } else {
           setGameStatus('playing');
         }

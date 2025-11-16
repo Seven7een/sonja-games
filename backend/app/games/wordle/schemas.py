@@ -51,6 +51,7 @@ class GameSessionResponse(BaseModel):
     attempts_used: int
     completed_at: Optional[datetime]
     created_at: datetime
+    answer: Optional[str] = None  # Only provided when game is completed
     
     class Config:
         from_attributes = True
