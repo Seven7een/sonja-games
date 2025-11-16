@@ -128,31 +128,29 @@ When you add/modify database models:
 
 ```
 sonja-games/
-├── backend/
+├── backend/                   # FastAPI application
 │   ├── app/
 │   │   ├── core/              # Shared auth & user management
-│   │   │   ├── models/        # Database models
-│   │   │   ├── schemas/       # Pydantic schemas
-│   │   │   ├── middleware/    # Auth middleware
-│   │   │   ├── services/      # Business logic
-│   │   │   └── routers/       # API endpoints
-│   │   ├── games/             # Game-specific modules
-│   │   │   └── wordle/        # Wordle game (coming soon)
+│   │   ├── games/             # Game-specific modules (wordle, crossword)
 │   │   ├── main.py            # FastAPI app
-│   │   ├── config.py          # Configuration
 │   │   └── database.py        # Database setup
 │   ├── alembic/               # Database migrations
 │   └── requirements.txt       # Python dependencies
-├── frontend/
+├── frontend/                  # React application
 │   ├── src/
 │   │   ├── core/              # Shared components & auth
 │   │   ├── games/             # Game-specific components
 │   │   └── pages/             # Top-level pages
+├── external-modules/          # External infrastructure (deployed separately)
+│   └── mini-crossword-generator-bedrock/  # AWS CDK for Bedrock access
 │   └── package.json           # Node dependencies
 ├── docker-compose.dev.yml     # Development Docker config
 ├── Makefile                   # Convenient commands
 └── README.md                  # This file
 ```
+
+**Note on External Modules:**
+The `external-modules/` directory contains infrastructure deployed separately from the main application (e.g., AWS CDK stacks). These are optional and only needed for specific features like AI-generated crosswords. See `external-modules/README.md` for details.
 
 ### Troubleshooting
 

@@ -6,6 +6,7 @@ old/
 .env
 .env.local
 .env.production
+.secrets
 
 # Python
 __pycache__/
