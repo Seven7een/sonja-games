@@ -6,7 +6,7 @@ Downloads 5-letter words and creates a JSON file for the Wordle game.
 import json
 import urllib.request
 
-WORD_LIST_URL = "https://raw.githubusercontent.com/dwyl/english-words/refs/heads/master/words_alpha.txt"
+WORD_LIST_URL = "https://gist.githubusercontent.com/dracos/dd0668f281e685bad51479e5acaadb93/raw/6bfa15d263d6d5b63840a8e5b64e04b382fdb079/valid-wordle-words.txt"
 OUTPUT_FILE = "app/games/wordle/words.json"
 
 def download_and_filter_words():
@@ -26,6 +26,10 @@ def download_and_filter_words():
 def main():
     words = download_and_filter_words()
     
+    # A few custom words
+
+    words += ['sonja']
+
     # Create JSON structure
     # Use all words for both answers and valid_guesses
     # The daily word will be selected using a hash function
